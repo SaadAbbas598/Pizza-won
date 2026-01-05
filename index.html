@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pizza Wheel Spinner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto 30px;
+        }
+
+        #wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 8px solid #333;
+            background: conic-gradient(
+                from 0deg,
+                #ff6b6b 0deg 45deg,
+                #4ecdc4 45deg 90deg,
+                #ffe66d 90deg 135deg,
+                #95e1d3 135deg 180deg,
+                #ff9ff3 180deg 225deg,
+                #feca57 225deg 270deg,
+                #48dbfb 270deg 315deg,
+                #ff6348 315deg 360deg
+            );
+            transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+            cursor: pointer;
+            position: relative;
+        }
+
+        #wheel::before {
+            content: '🍕';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 60px;
+        }
+
+        .arrow {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 30px solid #ff6b6b;
+            z-index: 10;
+        }
+
+        .spin-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .spin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .spin-btn:active {
+            transform: translateY(0);
+        }
+
+        .spin-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .message {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .message.show {
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .message-text {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .location-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #2e7d32;
+        }
+
+        .location-info strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍕 Pizza Wheel Spinner 🍕</h1>
+        
+        <div class="wheel-container">
+            <div class="arrow"></div>
+            <div id="wheel"></div>
+        </div>
+
+        <button class="spin-btn" id="spinBtn" onclick="spinWheel()">SPIN THE WHEEL!</button>
+
+        <div class="message" id="message">
+            <p class="message-text">Click the button to spin!</p>
+        </div>
+
+        <div id="locationInfo"></div>
+    </div>
+
+    <script>
+        let isSpinning = false;
+        let totalRotation = 0;
+        let locationRequested = false;
+
+        const prizes = [
+            "You have won 2 pizzas 🍕🍕",
+            "You have won 1 pizza 🍕",
+            "You have won 3 pizzas 🍕🍕🍕",
+            "You have won a large pizza 🍕",
+            "You have won 2 medium pizzas 🍕🍕",
+            "You have won 4 pizzas 🍕🍕🍕🍕",
+            "You have won a family deal 🍕🍕🍕",
+            "You have won 2 pizzas 🍕🍕"
+        ];
+
+        function spinWheel() {
+            if (isSpinning) return;
+
+            isSpinning = true;
+            const wheel = document.getElementById('wheel');
+            const spinBtn = document.getElementById('spinBtn');
+            const message = document.getElementById('message');
+
+            spinBtn.disabled = true;
+            message.classList.remove('show');
+            message.querySelector('.message-text').textContent = 'Spinning...';
+
+            // Random rotation between 1800 and 3600 degrees (5-10 full rotations)
+            const randomRotation = Math.floor(Math.random() * 1800) + 1800;
+            totalRotation += randomRotation;
+
+            wheel.style.transform = `rotate(${totalRotation}deg)`;
+
+            // Show result after spin completes
+            setTimeout(() => {
+                const randomPrize = prizes[Math.floor(Math.random() * prizes.length)];
+                message.classList.add('show');
+                message.querySelector('.message-text').textContent = randomPrize;
+                
+                // Get user location only on first spin
+                if (!locationRequested) {
+                    getUserLocation();
+                    locationRequested = true;
+                }
+
+                isSpinning = false;
+                spinBtn.disabled = false;
+            }, 4000);
+        }
+
+        function getUserLocation() {
+            const locationInfo = document.getElementById('locationInfo');
+
+            if ('geolocation' in navigator) {
+                locationInfo.innerHTML = '<p>Requesting location...</p>';
+
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+                        
+                        locationInfo.innerHTML = `
+                            <div class="location-info">
+                                <strong>📍 Your Location:</strong>
+                                <div>Latitude: ${latitude.toFixed(6)}</div>
+                                <div>Longitude: ${longitude.toFixed(6)}</div>
+                            </div>
+                        `;
+                    },
+                    function(error) {
+                        let errorMessage = '';
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage = 'Location access denied by user.';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage = 'Location information unavailable.';
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage = 'Location request timed out.';
+                                break;
+                            default:
+                                errorMessage = 'An unknown error occurred.';
+                        }
+                        locationInfo.innerHTML = `
+                            <div class="location-info error">
+                                <strong>⚠️ Location Error:</strong>
+                                <div>${errorMessage}</div>
+                            </div>
+                        `;
+                    }
+                );
+            } else {
+                locationInfo.innerHTML = `
+                    <div class="location-info error">
+                        <strong>⚠️ Geolocation not supported</strong>
+                        <div>Your browser doesn't support location services.</div>
+                    </div>
+                `;
+            }
+        }
+
+        // Alternative: Click on wheel itself to spin
+        document.getElementById('wheel').addEventListener('click', spinWheel);
+    </script>
+</body>
+</html>
